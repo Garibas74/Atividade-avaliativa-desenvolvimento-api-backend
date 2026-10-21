@@ -1,0 +1,37 @@
+import assert from 'node:assert/strict';
+const base = process.env.API_URL || 'http://localhost:3001/api';
+async function call(path, { token, method = 'GET', body, status = 200 } = {}) {
+  const response = await fetch(base + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
+  const result = response.status === 204 ? null : await response.json();
+  assert.equal(response.status, status, `${method} ${path}: ${JSON.stringify(result)}`);
+  return result;
+}
+const suffix = crypto.randomUUID();
+const senha = 'Teste-seguro-123';
+await call('/todos', { status: 401 });
+await call('/stats', { status: 401 });
+await call('/todos', { token: 'invalid', status: 401 });
+const a = await call('/auth/register', { method: 'POST', status: 201, body: { nome: 'Alice', email: `a-${suffix}@example.com`, senha } });
+const b = await call('/auth/register', { method: 'POST', status: 201, body: { nome: 'Bruno', email: `b-${suffix}@example.com`, senha } });
+assert.equal(a.usuario.senha, undefined);
+await call('/auth/register', { method: 'POST', status: 409, body: { nome: 'Alice', email: a.usuario.email, senha } });
+await call('/auth/login', { method: 'POST', status: 401, body: { email: a.usuario.email, senha: 'Senha-incorreta' } });
+const login = await call('/auth/login', { method: 'POST', body: { email: a.usuario.email, senha } });
+assert.equal(login.usuario.id, a.usuario.id);
+const ta = (await call('/todos', { token: a.token, method: 'POST', status: 201, body: { titulo: '<img src=x onerror=alert(1)>', descricao: 'Texto literal' } })).data;
+const tb = (await call('/todos', { token: b.token, method: 'POST', status: 201, body: { titulo: 'Privada B' } })).data;
+assert.equal(ta.usuarioId, a.usuario.id);
+assert.deepEqual((await call('/todos', { token: a.token })).data.map(t => t.id), [ta.id]);
+await call('/todos', { token: a.token, method: 'POST', status: 400, body: { titulo: 'Injeção de dono', usuarioId: b.usuario.id } });
+await call(`/todos/${tb.id}`, { token: a.token, status: 404 });
+await call(`/todos/${tb.id}`, { token: a.token, method: 'PUT', body: { concluida: true }, status: 404 });
+await call(`/todos/${tb.id}`, { token: a.token, method: 'DELETE', status: 404 });
+await call(`/todos/${ta.id}`, { token: a.token, method: 'PUT', body: { usuarioId: b.usuario.id }, status: 400 });
+await call(`/todos/${ta.id}`, { token: a.token, method: 'PUT', body: { concluida: 'true' }, status: 400 });
+await call(`/todos/${ta.id}`, { token: a.token, method: 'PUT', body: { concluida: true, titulo: 'Concluída A' } });
+assert.deepEqual(await call(`/stats?usuarioId=${b.usuario.id}`, { token: a.token }), { usuarioId: a.usuario.id, total: 1, concluidas: 1, pendentes: 0 });
+assert.deepEqual(await call('/stats', { token: b.token }), { usuarioId: b.usuario.id, total: 1, concluidas: 0, pendentes: 1 });
+await call(`/todos/${ta.id}`, { token: a.token, method: 'DELETE', status: 204 });
+await call(`/todos/${tb.id}`, { token: b.token, method: 'DELETE', status: 204 });
+assert.equal((await call('/stats', { token: a.token })).total, 0);
+console.log('OK: cadastro, login, validação, CRUD e isolamento de tarefas/estatísticas entre dois usuários.');

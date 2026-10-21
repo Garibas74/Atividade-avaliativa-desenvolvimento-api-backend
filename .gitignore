@@ -1,0 +1,7 @@
+.env
+.tools/
+node_modules/
+vendor/
+__pycache__/
+*.db
+*.log

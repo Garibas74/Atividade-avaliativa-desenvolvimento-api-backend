@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: todo
+      POSTGRES_DB: todo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U todo -d todo']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  logs:
+    build: ./services/logs
+    environment:
+      SERVICE_TOKEN: ${SERVICE_TOKEN:?Configure .env}
+    volumes:
+      - logs_data:/app/data
+  analyzer:
+    build: ./services/analyzer
+    environment:
+      DATABASE_URL: postgresql+psycopg://todo:${POSTGRES_PASSWORD}@db:5432/todo
+      JWT_SECRET: ${JWT_SECRET:?Configure .env}
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+    depends_on:
+      db:
+        condition: service_healthy
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    ports:
+      - '127.0.0.1:3001:3001'
+    environment:
+      DATABASE_URL: postgresql://todo:${POSTGRES_PASSWORD}@db:5432/todo
+      JWT_SECRET: ${JWT_SECRET}
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+      LOGS_URL: http://logs:8000
+      ANALYZER_URL: http://analyzer:8001
+    depends_on:
+      db:
+        condition: service_healthy
+      logs:
+        condition: service_started
+      analyzer:
+        condition: service_started
+volumes:
+  postgres_data:
+  logs_data:

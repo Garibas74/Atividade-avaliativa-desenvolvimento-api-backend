@@ -1,0 +1,6 @@
+.git
+.env
+.tools
+**/node_modules
+**/vendor
+**/__pycache__

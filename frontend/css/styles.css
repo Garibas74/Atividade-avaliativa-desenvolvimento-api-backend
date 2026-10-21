@@ -1,0 +1,99 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    display: flex;
+    justify-content: center;
+    padding: 30px;
+}
+
+.container {
+    width: min(800px, 100%);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.card {
+    background: #ffffff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+form input,
+form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+form button {
+    padding: 10px 15px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+form button:hover {
+    background: #0056b3;
+}
+
+ul {
+    list-style: none;
+}
+
+li {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+
+.completed {
+    text-decoration: line-through;
+    color: gray;
+}
+
+.actions button {
+    margin-left: 5px;
+    padding: 5px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-delete {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-complete {
+    background: #28a745;
+    color: white;
+}
+
+[hidden] { display: none !important; }
+h2 { margin-bottom: 16px; }
+label { display: block; font-size: 14px; }
+.hint { color: #5b6570; font-size: 13px; margin: 8px 0; overflow-wrap: anywhere; }
+.session { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+#message:not(:empty) { background: #fff2cd; padding: 14px; border-radius: 8px; margin-bottom: 16px; }
+button { cursor: pointer; padding: 8px 12px; }
+button:disabled { opacity: .6; cursor: wait; }
+li { gap: 12px; overflow-wrap: anywhere; }
+li > div:first-child { min-width: 0; }
+.actions { display: flex; align-items: center; flex-shrink: 0; }
+@media (max-width: 500px) { body { padding: 12px; } li { flex-direction: column; } }
